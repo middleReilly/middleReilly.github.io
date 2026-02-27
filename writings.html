@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reilly White — Writings</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+  <!-- Shared stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Navigation is injected by nav.js -->
+
+  <main class="page-container">
+
+    <!-- ─── Page Header ─── -->
+    <section class="section">
+      <h1>Writings</h1>
+      <p style="max-width:600px;">
+        Short-form thoughts, reflections, and ideas.
+        Click on any piece to read the full text.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ─── Posts Container ───
+         This div is populated dynamically by writings.js.
+         - If no ?id= param: shows a list of all published posts
+         - If ?id=<uuid>:    shows the full post + feedback section -->
+    <div id="posts-container">
+      <!-- Loading skeletons will appear here while Supabase fetches data -->
+      <div class="card">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+      </div>
+      <div class="card">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Supabase JS client (loaded from CDN for GitHub Pages compatibility) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Shared scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/nav.js"></script>
+
+  <!-- Initialize the Supabase client, then load the writings logic -->
+  <script>
+    // Create the Supabase client instance using credentials from config.js
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+  <script src="js/writings.js"></script>
+</body>
+</html>

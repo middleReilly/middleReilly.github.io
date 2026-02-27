@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reilly White — Home</title>
+
+  <!-- Google Fonts: Lora (headings) + Source Sans 3 (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+  <!-- Shared stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Navigation is injected by nav.js -->
+
+  <main class="page-container">
+
+    <!-- ─── Hero / Greeting ─── -->
+    <section class="section">
+      <h1>Hello, I'm Reilly.</h1>
+      <p style="font-size:var(--size-lg); max-width:600px;">
+        Welcome to my corner of the internet — a place for projects,
+        writings, and whatever I'm working on right now.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ─── Current Professional Status ─── -->
+    <!-- EDIT THIS: Update the description to reflect what you're
+         currently doing professionally. -->
+    <section class="section">
+      <p class="section-label">Currently</p>
+      <div class="card">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>What I'm doing now</span>
+        </div>
+        <p style="margin-top:var(--space-md);">
+          <!-- ✏️ Replace this placeholder with your current role or focus -->
+          Describe your current professional focus here — your role,
+          the problems you're solving, or what you're learning.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ─── Projects ─── -->
+    <!-- Project data lives in js/projects.js — edit that file
+         to add, remove, or update projects. Each card links
+         to its own detail page (project.html?id=X). -->
+    <section class="section">
+      <p class="section-label">Projects</p>
+
+      <!-- Dynamically populated by projects.js -->
+      <div id="projects-container">
+        <div class="card">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-text"></div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Supabase JS client (projects now load from Supabase) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Shared scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/nav.js"></script>
+
+  <!-- Initialize Supabase, then load projects -->
+  <script>
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+  <script src="js/projects.js"></script>
+</body>
+</html>
