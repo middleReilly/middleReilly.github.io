@@ -125,9 +125,10 @@ async function renderProjectDetail() {
         ).join('')
       : '';
 
-    // Optional external link button
-    const linkHtml = project.link
-      ? `<a href="${project.link}" target="_blank" rel="noopener"
+    // Optional external link button (sanitised to block javascript: URIs)
+    const safeLink = sanitizeUrl(project.link);
+    const linkHtml = safeLink
+      ? `<a href="${escapeHtmlSafe(safeLink)}" target="_blank" rel="noopener"
             class="btn btn-secondary" style="margin-top:var(--space-md);">
            View project &rarr;
          </a>`
@@ -247,6 +248,18 @@ async function submitFeedback(contextType, contextId, contextTitle) {
 /* ==========================================================
    Helper Functions
    ========================================================== */
+
+/* Only allow http(s) URLs — blocks javascript:, data:, etc. */
+function sanitizeUrl(url) {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.href;
+    }
+  } catch (_) { /* invalid URL, fall through */ }
+  return '';
+}
 
 /* Escape HTML entities to prevent XSS */
 function escapeHtmlSafe(str) {

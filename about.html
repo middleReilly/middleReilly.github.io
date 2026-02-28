@@ -27,17 +27,36 @@
 
     <!-- ─── Background Blurb ─── -->
     <!-- NEED TO UPDATE ONCE YOU HAVE TIME -->
-    <!-- <section class="section">
+    <section class="section">
       <p class="section-label">Background</p>
 
       <p style="font-size:var(--size-lg); line-height:1.8; max-width:720px;">
-        ...
+        Hi, I'm Reilly,
       </p>
 
       <p style="font-size:var(--size-lg); line-height:1.8; max-width:720px;">
-        ...
+        I graduated in May 2025 from Tufts University with a degree in Cognitive and Brain Sciences.
+        I minored in Theater and Computer Science - Theater because I like talking to people, and C.S. because I can only talk for so long.
       </p>
-    </section> -->
+
+      <p style="font-size:var(--size-lg); line-height:1.8; max-width:720px;">
+        Currently, I am training with the Cyber Center of Excellence at Fort Gordon, GA in order to 
+        become a Cyber Warefare Officer in the U.S. Army Reserves. We're learning Cisco networking and security right now, so I'll
+        be seeking the CCNA and CompTIA Security+ certifications while I'm down here, too.
+      </p>
+      
+      <p style="font-size:var(--size-lg); line-height:1.8; max-width:720px;">  
+        Outside of training or work, I like to run, rewatch movies for the fifth time, drum, and snobbishly drink espresso.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ─── Current Interests ─── -->
+    <section class="section">
+      <p class="section-label">Current Interests</p>
+      <div id="interests-carousel"></div>
+    </section>
 
     <hr class="divider">
 
@@ -60,8 +79,15 @@
 
   </main>
 
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Shared scripts -->
   <script src="js/config.js"></script>
+  <script>
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
   <script src="js/nav.js"></script>
+  <script src="js/interests.js"></script>
 </body>
 </html>

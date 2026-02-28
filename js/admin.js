@@ -1,11 +1,12 @@
 /* ==========================================================
    ADMIN.JS — Supabase Auth–protected dashboard for managing
-   writings, projects, and viewing feedback messages.
+   writings, projects, interests, and viewing feedback messages.
 
-   Three tabs:
-   1. Writings  — create & manage blog posts
-   2. Projects  — create & manage project entries
-   3. Feedback  — read messages submitted by visitors
+   Four tabs:
+   1. Writings   — create & manage blog posts
+   2. Projects   — create & manage project entries
+   3. Interests  — manage current books/music for the About carousel
+   4. Feedback   — read messages submitted by visitors
 */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -105,6 +106,7 @@ function showDashboard() {
     <div class="admin-tabs" id="admin-tabs">
       <button class="admin-tab active" data-tab="writings">Writings</button>
       <button class="admin-tab" data-tab="projects">Projects</button>
+      <button class="admin-tab" data-tab="interests">Interests</button>
       <button class="admin-tab" data-tab="feedback">Feedback</button>
     </div>
 
@@ -135,8 +137,9 @@ function showDashboard() {
 function renderTabContent() {
   const panel = document.getElementById('tab-content');
   switch (activeTab) {
-    case 'writings':  renderWritingsTab(panel);  break;
+    case 'writings':  renderWritingsTab(panel);   break;
     case 'projects':  renderProjectsTab(panel);  break;
+    case 'interests': renderInterestsTab(panel); break;
     case 'feedback':  renderFeedbackTab(panel);  break;
   }
 }
@@ -241,16 +244,25 @@ async function loadExistingPosts() {
         </div>
         <div class="admin-list-actions">
           <button class="btn btn-secondary"
-                  onclick="togglePostPublish('${post.id}', ${post.published})">
+                  data-action="toggle-post" data-id="${escapeHtml(post.id)}" data-published="${post.published}">
             ${post.published ? 'Unpublish' : 'Publish'}
           </button>
           <button class="btn btn-secondary btn-danger"
-                  onclick="deletePost('${post.id}')">
+                  data-action="delete-post" data-id="${escapeHtml(post.id)}">
             Delete
           </button>
         </div>
       </div>
     `).join('');
+
+    // Event delegation for post actions
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id, published } = btn.dataset;
+      if (action === 'toggle-post') togglePostPublish(id, published === 'true');
+      if (action === 'delete-post') deletePost(id);
+    });
 
   } catch (err) {
     console.error('Error loading posts:', err);
@@ -417,16 +429,25 @@ async function loadExistingProjects() {
         </div>
         <div class="admin-list-actions">
           <button class="btn btn-secondary"
-                  onclick="toggleProjectPublish('${proj.id}', ${proj.published})">
+                  data-action="toggle-project" data-id="${escapeHtml(proj.id)}" data-published="${proj.published}">
             ${proj.published ? 'Unpublish' : 'Publish'}
           </button>
           <button class="btn btn-secondary btn-danger"
-                  onclick="deleteProject('${proj.id}')">
+                  data-action="delete-project" data-id="${escapeHtml(proj.id)}">
             Delete
           </button>
         </div>
       </div>
     `).join('');
+
+    // Event delegation for project actions
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id, published } = btn.dataset;
+      if (action === 'toggle-project') toggleProjectPublish(id, published === 'true');
+      if (action === 'delete-project') deleteProject(id);
+    });
 
   } catch (err) {
     console.error('Error loading projects:', err);
@@ -464,7 +485,183 @@ async function deleteProject(id) {
 
 
 /* ==========================================================
-   TAB 3: Feedback Inbox
+   TAB 3: Interests (Books & Music for About carousel)
+   ========================================================== */
+
+function renderInterestsTab(panel) {
+  panel.innerHTML = `
+    <div class="section">
+      <p class="section-label">Add Interest</p>
+      <div class="form-group">
+        <label for="int-title">Title</label>
+        <input type="text" id="int-title"
+               placeholder="e.g. House of Leaves">
+      </div>
+      <div class="form-group">
+        <label for="int-creator">Author / Artist</label>
+        <input type="text" id="int-creator"
+               placeholder="e.g. Mark Danielewski">
+      </div>
+      <div class="form-group">
+        <label for="int-category">Category</label>
+        <select id="int-category">
+          <option value="book">Book</option>
+          <option value="music">Music</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="int-cover">Cover Image URL</label>
+        <input type="text" id="int-cover"
+               placeholder="https://m.media-amazon.com/images/...">
+      </div>
+      <div class="form-group">
+        <label for="int-order">Display Order</label>
+        <input type="number" id="int-order" value="0" min="0"
+               placeholder="Lower numbers appear first">
+      </div>
+      <button class="btn btn-primary" id="publish-int-btn">Add Interest</button>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <p class="section-label">Current Interests</p>
+      <div id="existing-interests">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-text"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('publish-int-btn')
+    .addEventListener('click', publishInterest);
+  loadExistingInterests();
+}
+
+async function publishInterest() {
+  const title    = document.getElementById('int-title').value.trim();
+  const creator  = document.getElementById('int-creator').value.trim();
+  const category = document.getElementById('int-category').value;
+  const cover_url = document.getElementById('int-cover').value.trim();
+  const display_order = parseInt(document.getElementById('int-order').value, 10) || 0;
+
+  if (!title || !creator) {
+    showToast('Please fill in at least the title and author/artist.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('publish-int-btn');
+  btn.textContent = 'Adding...';
+  btn.disabled = true;
+
+  try {
+    const { error } = await db
+      .from('interests')
+      .insert([{ title, creator, category, cover_url, display_order, published: true }]);
+
+    if (error) throw error;
+
+    document.getElementById('int-title').value   = '';
+    document.getElementById('int-creator').value  = '';
+    document.getElementById('int-cover').value    = '';
+    document.getElementById('int-order').value    = '0';
+    showToast('Interest added!', 'success');
+    loadExistingInterests();
+  } catch (err) {
+    console.error('Error adding interest:', err);
+    showToast('Failed to add interest.', 'error');
+  } finally {
+    btn.textContent = 'Add Interest';
+    btn.disabled = false;
+  }
+}
+
+async function loadExistingInterests() {
+  const container = document.getElementById('existing-interests');
+  if (!container) return;
+
+  try {
+    const { data: items, error } = await db
+      .from('interests')
+      .select('id, title, creator, category, display_order, published')
+      .order('display_order', { ascending: true });
+
+    if (error) throw error;
+
+    if (!items || items.length === 0) {
+      container.innerHTML = `
+        <p style="color:var(--sage);">No interests yet. Add one above.</p>`;
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="card admin-list-card">
+        <div class="admin-list-info">
+          <span class="card-title">${escapeHtml(item.title)}</span>
+          <span class="card-meta">${escapeHtml(item.creator)}</span>
+          <span class="tag">${escapeHtml(item.category)}</span>
+          <span class="card-meta">#${item.display_order}</span>
+          ${!item.published ? '<span class="tag">hidden</span>' : ''}
+        </div>
+        <div class="admin-list-actions">
+          <button class="btn btn-secondary"
+                  data-action="toggle-interest" data-id="${escapeHtml(item.id)}" data-published="${item.published}">
+            ${item.published ? 'Hide' : 'Show'}
+          </button>
+          <button class="btn btn-secondary btn-danger"
+                  data-action="delete-interest" data-id="${escapeHtml(item.id)}">
+            Delete
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Event delegation for interest actions
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id, published } = btn.dataset;
+      if (action === 'toggle-interest') toggleInterestPublish(id, published === 'true');
+      if (action === 'delete-interest') deleteInterest(id);
+    });
+
+  } catch (err) {
+    console.error('Error loading interests:', err);
+    container.innerHTML = `
+      <p style="color:var(--sage);">Unable to load interests.</p>`;
+  }
+}
+
+async function toggleInterestPublish(id, currentState) {
+  try {
+    const { error } = await db
+      .from('interests')
+      .update({ published: !currentState })
+      .eq('id', id);
+    if (error) throw error;
+    showToast(currentState ? 'Interest hidden.' : 'Interest visible!', 'success');
+    loadExistingInterests();
+  } catch (err) {
+    showToast('Failed to update interest.', 'error');
+  }
+}
+
+async function deleteInterest(id) {
+  if (!confirm('Delete this interest?')) return;
+  try {
+    const { error } = await db
+      .from('interests').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Interest deleted.', 'success');
+    loadExistingInterests();
+  } catch (err) {
+    showToast('Failed to delete interest.', 'error');
+  }
+}
+
+
+/* ==========================================================
+   TAB 4: Feedback Inbox
    ========================================================== */
 
 function renderFeedbackTab(panel) {
@@ -511,12 +708,12 @@ async function loadFeedback() {
           <div class="admin-list-actions">
             ${!msg.is_read
               ? `<button class="btn btn-secondary" style="font-size:0.75rem; padding:4px 12px;"
-                         onclick="markFeedbackRead('${msg.id}')">
+                         data-action="mark-read" data-id="${escapeHtml(msg.id)}">
                    Mark read
                  </button>`
               : ''}
             <button class="btn btn-secondary btn-danger" style="font-size:0.75rem; padding:4px 12px;"
-                    onclick="deleteFeedback('${msg.id}')">
+                    data-action="delete-feedback" data-id="${escapeHtml(msg.id)}">
               Delete
             </button>
           </div>
@@ -528,6 +725,15 @@ async function loadFeedback() {
         <p class="card-description" style="white-space:pre-wrap;">${escapeHtml(msg.message)}</p>
       </div>
     `).join('');
+
+    // Event delegation for feedback actions
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+      if (action === 'mark-read') markFeedbackRead(id);
+      if (action === 'delete-feedback') deleteFeedback(id);
+    });
 
   } catch (err) {
     console.error('Error loading feedback:', err);
