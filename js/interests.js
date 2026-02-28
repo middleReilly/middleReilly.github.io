@@ -52,13 +52,21 @@ async function renderInterestsCarousel() {
     interestItems = data;
     currentIndex  = 0;
 
-    // Build the carousel DOM
+    // Build the carousel DOM (inline styles as fallback in case stylesheet fails)
     container.innerHTML = `
-      <div class="carousel-viewport">
-        <div class="carousel-slide active" id="carousel-slide-a"></div>
-        <div class="carousel-slide" id="carousel-slide-b"></div>
+      <div class="carousel-viewport"
+           style="position:relative; min-height:240px; overflow:hidden;">
+        <div class="carousel-slide active" id="carousel-slide-a"
+             style="position:absolute; top:0; left:0; right:0; bottom:0;
+                    display:flex; align-items:center; justify-content:center; gap:2rem;
+                    transition:opacity 0.6s ease;"></div>
+        <div class="carousel-slide" id="carousel-slide-b"
+             style="position:absolute; top:0; left:0; right:0; bottom:0;
+                    display:flex; align-items:center; justify-content:center; gap:2rem;
+                    opacity:0; transition:opacity 0.6s ease; pointer-events:none;"></div>
       </div>
-      <div class="carousel-controls">
+      <div class="carousel-controls"
+           style="display:flex; align-items:center; justify-content:center; gap:1rem; margin-top:1.5rem;">
         <button class="carousel-btn" id="carousel-prev" aria-label="Previous">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -132,11 +140,13 @@ function fillSlide(slideId, item) {
   const safeCategory = escapeInterest(item.category);
 
   slide.innerHTML = `
-    <div class="carousel-cover">
+    <div class="carousel-cover"
+         style="width:180px; height:180px; border-radius:8px; overflow:hidden; flex-shrink:0;">
       <img src="${safeCover}" alt="${safeTitle}" loading="lazy"
+           style="width:100%; height:100%; object-fit:cover; display:block;"
            onerror="this.parentElement.classList.add('cover-error')">
     </div>
-    <div class="carousel-info">
+    <div class="carousel-info" style="max-width:320px;">
       <span class="carousel-category">
         ${categoryIcon} ${safeCategory}
       </span>
@@ -160,9 +170,14 @@ function goTo(newIndex) {
   // Fill the incoming slide with the new item
   fillSlide(incoming.id, interestItems[newIndex]);
 
-  // Crossfade
+  // Crossfade — toggle class AND inline styles for resilience
   incoming.classList.add('active');
+  incoming.style.opacity = '1';
+  incoming.style.pointerEvents = 'auto';
+
   outgoing.classList.remove('active');
+  outgoing.style.opacity = '0';
+  outgoing.style.pointerEvents = 'none';
 
   currentIndex = newIndex;
   updateDots();
