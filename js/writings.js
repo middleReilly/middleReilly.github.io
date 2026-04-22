@@ -63,7 +63,7 @@ async function loadAllPosts() {
     console.error('Error loading posts:', err);
     container.innerHTML = `
       <p style="color:var(--sage); text-align:center;">
-        Unable to load writings. Please check your Supabase configuration.
+        Unable to load writings. Check back in later.
       </p>`;
   }
 }

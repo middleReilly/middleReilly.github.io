@@ -62,7 +62,7 @@ async function renderProjectCards() {
     console.error('Error loading projects:', err);
     container.innerHTML = `
       <p style="color:var(--sage); text-align:center;">
-        Unable to load projects. Please check your Supabase configuration.
+        Unable to load projects. Check back in later.
       </p>`;
   }
 }
